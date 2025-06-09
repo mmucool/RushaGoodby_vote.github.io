@@ -17,7 +17,7 @@
     button {
       flex: 1;
       font-size: 5em;
-      border: none; 
+      border: none;
       width: 100%;
       color: white;
       cursor: pointer;
@@ -42,43 +42,46 @@
   <button id="minusBtn" class="minus" onclick="handleVote('minus')">−</button>
 
   <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbxs5xWsjuD-7-Qjcjm66PV1G0vltdRBQnJmtYmFo9Zx28KKqhsF0qZftNmEgXAvzF2-/exec"; // ← вставь ссылку из Apps Script
+    const API_URL = "https://script.google.com/macros/s/AKfycbxs5xWsjuD-7-Qjcjm66PV1G0vltdRBQnJmtYmFo9Zx28KKqhsF0qZftNmEgXAvzF2-/exec";
 
     function handleVote(type) {
-      disableButtons(type);
+      disableButton(type);
 
       fetch(API_URL, {
         method: "POST",
-        body: JSON.stringify({ vote: type }),
-        headers: { "Content-Type": "application/json" }
+        mode: "cors",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ vote: type })
       })
       .then(res => res.text())
       .then(response => {
         if (response === "Too soon") {
           alert("Вы можете голосовать только раз в минуту.");
+        } else if (response !== "OK") {
+          alert("Что-то пошло не так: " + response);
         }
       })
-      .catch(() => {
-        alert("Ошибка отправки запроса.");
+      .catch((error) => {
+        alert("Ошибка отправки запроса: " + error.message);
       });
     }
 
-    function disableButtons(type) {
-      const button = document.getElementById(type + 'Btn');
-      button.disabled = true;
-      let seconds = 60;
+    function disableButton(type) {
+      const btn = document.getElementById(type + "Btn");
+      btn.disabled = true;
+      let secs = 60;
+      const originalText = type === 'plus' ? "+" : "−";
 
-      const originalText = button.innerText;
-      button.innerText = `⏳ ${seconds}s`;
-
+      btn.innerText = `⏳ ${secs}s`;
       const interval = setInterval(() => {
-        seconds--;
-        button.innerText = `⏳ ${seconds}s`;
-
-        if (seconds <= 0) {
+        secs--;
+        btn.innerText = `⏳ ${secs}s`;
+        if (secs <= 0) {
           clearInterval(interval);
-          button.innerText = originalText;
-          button.disabled = false;
+          btn.disabled = false;
+          btn.innerText = originalText;
         }
       }, 1000);
     }
