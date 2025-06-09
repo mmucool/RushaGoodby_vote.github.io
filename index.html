@@ -13,12 +13,20 @@
       display: flex;
       flex-direction: column;
       height: 100vh;
+      align-items: center;
+      justify-content: center;
+    }
+    .button-wrapper {
+      display: flex;
+      flex-direction: row;
+      width: 100%;
     }
     button {
       flex: 1;
       font-size: 5em;
       border: none;
-      width: 100%;
+      width: 50%;
+      height: 50vh;
       color: white;
       cursor: pointer;
       transition: 0.2s ease;
@@ -35,56 +43,72 @@
     .minus:disabled {
       background-color: #7c1d26;
     }
+    .timer {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 3em;
+      color: #ffffffaa;
+      background-color: #222;
+      padding: 10px 20px;
+      border-radius: 20px;
+      display: none;
+    }
   </style>
 </head>
 <body>
-  <button id="plusBtn" class="plus" onclick="handleVote('plus')">+</button>
-  <button id="minusBtn" class="minus" onclick="handleVote('minus')">−</button>
+  <div class="timer" id="globalTimer">⏳ 60s</div>
+  <div class="button-wrapper">
+    <button id="plusBtn" class="plus" onclick="handleVote('plus')">+</button>
+    <button id="minusBtn" class="minus" onclick="handleVote('minus')">−</button>
+  </div>
 
   <script>
     const API_URL = "https://hook.eu2.make.com/o2cnypr1lj6mc87bxj7ss3je1takarml";
 
     function handleVote(type) {
-  disableButton(type);
+      // Блокируем обе кнопки
+      document.getElementById("plusBtn").disabled = true;
+      document.getElementById("minusBtn").disabled = true;
 
-  fetch(API_URL, {
-    method: "POST",
-    mode: "cors",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({ vote: type })
-  })
-  .then(response => {
-    if (!response.ok) {
-      throw new Error(response.statusText); // Покажет "Accepted"
+      // Запускаем глобальный таймер
+      startGlobalTimer();
+
+      // Отправка запроса
+      fetch(API_URL, {
+        method: "POST",
+        mode: "cors",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ vote: type })
+      })
+      .then(res => {
+        if (!res.ok) throw new Error(res.statusText);
+        return res.text();
+      })
+      .then(() => {
+        console.log("Голос принят");
+      })
+      .catch((error) => {
+        alert("Ошибка отправки запроса: " + error.message);
+      });
     }
-    return response.text();
-  })
-  .then(responseText => {
-    // Всё хорошо — можно ничего не показывать
-    console.log("Голос принят:", responseText);
-  })
-  .catch((error) => {
-    alert("Что-то пошло не так: " + error.message);
-  });
-}
 
+    function startGlobalTimer() {
+      const timerDiv = document.getElementById("globalTimer");
+      let seconds = 60;
+      timerDiv.innerText = `⏳ ${seconds}s`;
+      timerDiv.style.display = "block";
 
-    function disableButton(type) {
-      const btn = document.getElementById(type + "Btn");
-      btn.disabled = true;
-      let secs = 60;
-      const originalText = type === 'plus' ? "+" : "−";
-
-      btn.innerText = `⏳ ${secs}s`;
       const interval = setInterval(() => {
-        secs--;
-        btn.innerText = `⏳ ${secs}s`;
-        if (secs <= 0) {
+        seconds--;
+        timerDiv.innerText = `⏳ ${seconds}s`;
+        if (seconds <= 0) {
           clearInterval(interval);
-          btn.disabled = false;
-          btn.innerText = originalText;
+          timerDiv.style.display = "none";
+          document.getElementById("plusBtn").disabled = false;
+          document.getElementById("minusBtn").disabled = false;
         }
       }, 1000);
     }
