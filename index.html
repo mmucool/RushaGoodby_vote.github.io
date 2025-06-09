@@ -45,28 +45,31 @@
     const API_URL = "https://hook.eu2.make.com/o2cnypr1lj6mc87bxj7ss3je1takarml";
 
     function handleVote(type) {
-      disableButton(type);
+  disableButton(type);
 
-      fetch(API_URL, {
-        method: "POST",
-        mode: "cors",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ vote: type })
-      })
-      .then(res => res.text())
-      .then(response => {
-        if (response === "Too soon") {
-          alert("Вы можете голосовать только раз в минуту.");
-        } else if (response !== "OK") {
-          alert("Что-то пошло не так: " + response);
-        }
-      })
-      .catch((error) => {
-        alert("Ошибка отправки запроса: " + error.message);
-      });
+  fetch(API_URL, {
+    method: "POST",
+    mode: "cors",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ vote: type })
+  })
+  .then(response => {
+    if (!response.ok) {
+      throw new Error(response.statusText); // Покажет "Accepted"
     }
+    return response.text();
+  })
+  .then(responseText => {
+    // Всё хорошо — можно ничего не показывать
+    console.log("Голос принят:", responseText);
+  })
+  .catch((error) => {
+    alert("Что-то пошло не так: " + error.message);
+  });
+}
+
 
     function disableButton(type) {
       const btn = document.getElementById(type + "Btn");
